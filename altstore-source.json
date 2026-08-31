@@ -1,0 +1,16 @@
+{
+  "name": "Logjam",
+  "identifier": "com.lanceconzett.logjam.source",
+  "sourceURL": "https://raw.githubusercontent.com/LanceCo/logjam/main/altstore-source.json",
+  "apps": [
+    {
+      "name": "Logjam",
+      "bundleIdentifier": "com.lanceconzett.Logjam",
+      "developerName": "Lance Conzett",
+      "subtitle": "Vinyl collection & listening log",
+      "localizedDescription": "Track listens across your Discogs-imported vinyl collection.",
+      "iconURL": "https://raw.githubusercontent.com/LanceCo/logjam/main/Vinyl%20Listening%20App%20Logo%20%282%29.png",
+      "versions": []
+    }
+  ]
+}

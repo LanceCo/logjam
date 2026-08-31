@@ -1,0 +1,20 @@
+.DS_Store
+
+# XcodeGen-generated project (regenerate with `xcodegen generate`)
+Logjam.xcodeproj/
+Generated/
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Local device builds (e.g. for AltStore sideloading)
+build_ios/
+*.ipa
+Payload/

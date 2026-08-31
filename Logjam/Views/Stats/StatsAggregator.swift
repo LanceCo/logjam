@@ -1,0 +1,139 @@
+import Foundation
+import SwiftData
+
+/// Pure computation over the collection + listening history — no persistence, no side effects.
+/// Recomputed fresh each time `StatsView` re-renders off its `@Query` results.
+struct StatsAggregator {
+    private let activeReleases: [Release]
+    /// Ascending by date — needed for milestone/activity ordering.
+    private let logEntries: [ListenLogEntry]
+
+    init(releases: [Release], logEntries: [ListenLogEntry]) {
+        self.activeReleases = releases.filter { !$0.isRemovedFromDiscogs }
+        self.logEntries = logEntries
+    }
+
+    var collectionSize: Int { activeReleases.count }
+
+    var totalAlbumsLogged: Int {
+        Set(logEntries.compactMap { $0.release?.persistentModelID }).count
+    }
+
+    var totalPlays: Int { logEntries.count }
+
+    var lovedCount: Int {
+        Set(logEntries.filter(\.loved).compactMap { $0.release?.persistentModelID }).count
+    }
+
+    /// nil when no logged release has any parseable track duration data — Discogs doesn't
+    /// always list durations, so this is a lower-bound estimate, not an exact total.
+    var totalHoursListened: Double? {
+        let seconds = logEntries.compactMap { $0.release.flatMap(Self.totalDurationSeconds(for:)) }
+        guard !seconds.isEmpty else { return nil }
+        return seconds.reduce(0, +) / 3600
+    }
+
+    var activityByMonth: [(month: Date, count: Int)] {
+        Self.bucketByMonth(logEntries.map(\.date))
+    }
+
+    var additionsByMonth: [(month: Date, count: Int)]? {
+        let dates = activeReleases.compactMap(\.dateAdded)
+        guard !dates.isEmpty else { return nil }
+        return Self.bucketByMonth(dates)
+    }
+
+    var genreCounts: [(genre: String, count: Int)] {
+        let loggedReleases = Self.distinctReleases(from: logEntries)
+        let grouped = Dictionary(grouping: loggedReleases.flatMap(\.genres)) { $0 }
+        return grouped.map { (genre: $0.key, count: $0.value.count) }
+            .sorted { $0.count > $1.count }
+    }
+
+    var ratedEntries: [ListenLogEntry] {
+        logEntries.filter { $0.starRating > 0 }
+    }
+
+    var ratingHistogram: [Double: Int] {
+        Dictionary(grouping: ratedEntries, by: \.stars).mapValues(\.count)
+    }
+
+    var averageRating: Double? {
+        let rated = ratedEntries
+        guard !rated.isEmpty else { return nil }
+        return rated.reduce(0) { $0 + $1.stars } / Double(rated.count)
+    }
+
+    var highestRated: ListenLogEntry? {
+        ratedEntries.max { $0.starRating < $1.starRating }
+    }
+
+    var lowestRated: ListenLogEntry? {
+        ratedEntries.min { $0.starRating < $1.starRating }
+    }
+
+    var topArtists: [(artist: String, count: Int)] {
+        let loggedReleases = Self.distinctReleases(from: logEntries)
+        let grouped = Dictionary(grouping: loggedReleases, by: \.artistName)
+        return grouped.map { (artist: $0.key, count: $0.value.count) }
+            .sorted { $0.count > $1.count }
+            .prefix(10)
+            .map { $0 }
+    }
+
+    var firstLogged: ListenLogEntry? { logEntries.first }
+    var mostRecentLogged: ListenLogEntry? { logEntries.last }
+
+    /// Round-number crossings (10th, 25th, 50th, 100th, 250th, 500th, 1000th listen) already reached.
+    var milestoneEntries: [(index: Int, entry: ListenLogEntry)] {
+        let thresholds = [10, 25, 50, 100, 250, 500, 1000]
+        return thresholds
+            .filter { $0 <= logEntries.count }
+            .map { (index: $0, entry: logEntries[$0 - 1]) }
+    }
+
+    var listenedVsUnlistened: (listened: Int, unlistened: Int) {
+        let listened = activeReleases.filter(\.isListened).count
+        return (listened, activeReleases.count - listened)
+    }
+
+    var keepVsSell: (keep: Int, sell: Int) {
+        let sell = activeReleases.filter { $0.keepSellStatus == .sell }.count
+        return (activeReleases.count - sell, sell)
+    }
+
+    private static func distinctReleases(from entries: [ListenLogEntry]) -> [Release] {
+        var seen = Set<PersistentIdentifier>()
+        var result: [Release] = []
+        for entry in entries {
+            guard let release = entry.release, seen.insert(release.persistentModelID).inserted else { continue }
+            result.append(release)
+        }
+        return result
+    }
+
+    private static func totalDurationSeconds(for release: Release) -> TimeInterval? {
+        guard let tracklist = release.cachedTracklist, !tracklist.isEmpty else { return nil }
+        let seconds = tracklist.compactMap { parseDuration($0.duration) }
+        guard !seconds.isEmpty else { return nil }
+        return seconds.reduce(0, +)
+    }
+
+    /// Parses Discogs' "M:SS" (or occasionally "H:MM:SS") track duration strings.
+    private static func parseDuration(_ duration: String?) -> TimeInterval? {
+        guard let duration, !duration.isEmpty else { return nil }
+        let parts = duration.split(separator: ":").compactMap { Int($0) }
+        guard !parts.isEmpty, parts.count == duration.split(separator: ":").count else { return nil }
+        let seconds = parts.reduce(0) { $0 * 60 + $1 }
+        return TimeInterval(seconds)
+    }
+
+    private static func bucketByMonth(_ dates: [Date]) -> [(month: Date, count: Int)] {
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: dates) { date in
+            calendar.date(from: calendar.dateComponents([.year, .month], from: date)) ?? date
+        }
+        return grouped.map { (month: $0.key, count: $0.value.count) }
+            .sorted { $0.month < $1.month }
+    }
+}

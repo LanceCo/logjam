@@ -1,0 +1,96 @@
+name: Release IPA
+
+# Fires when you push a version tag: git tag v1.2.0 && git push --tags
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen and ldid
+        run: brew install xcodegen ldid
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      # No signing identity or Apple ID involved here on purpose: this produces an
+      # unsigned build. AltServer performs the real signing (with your own free
+      # Apple ID cert) when you install/update through AltStore on your phone.
+      - name: Build unsigned app
+        run: |
+          VERSION_NUMBER="${GITHUB_REF_NAME#v}"
+          xcodebuild build \
+            -project Logjam.xcodeproj \
+            -scheme Logjam \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath build_ios \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            MARKETING_VERSION="$VERSION_NUMBER" \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER"
+
+      # ldid embeds the entitlements (iCloud/CloudKit) directly into the binary
+      # with a throwaway ad-hoc signature. AltServer reads that entitlement set
+      # and re-signs the app for real using your own developer identity.
+      - name: Fakesign entitlements with ldid
+        run: |
+          APP_PATH="build_ios/Build/Products/Release-iphoneos/Logjam.app"
+          ldid -SGenerated/Logjam.entitlements "$APP_PATH/Logjam"
+
+      - name: Package IPA
+        run: |
+          APP_PATH="build_ios/Build/Products/Release-iphoneos/Logjam.app"
+          mkdir -p Payload
+          cp -R "$APP_PATH" "Payload/Logjam.app"
+          zip -r Logjam.ipa Payload
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: Logjam.ipa
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+
+      # Keeps altstore-source.json (on main) pointing at the release we just
+      # created, so AltStore sees a new version next time it refreshes.
+      - name: Update AltStore source
+        run: |
+          VERSION_NUMBER="${GITHUB_REF_NAME#v}"
+          SIZE=$(stat -f%z Logjam.ipa)
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/Logjam.ipa"
+
+          git fetch origin main
+          git checkout main
+
+          jq --arg version "$VERSION_NUMBER" \
+             --arg date "$DATE" \
+             --arg url "$DOWNLOAD_URL" \
+             --argjson size "$SIZE" \
+             '.apps[0].versions = [{version: $version, date: $date, downloadURL: $url, size: $size, minOSVersion: "18.0"}] + .apps[0].versions' \
+             altstore-source.json > altstore-source.tmp.json
+          mv altstore-source.tmp.json altstore-source.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add altstore-source.json
+          git commit -m "Update AltStore source for ${GITHUB_REF_NAME}"
+          git push origin main
