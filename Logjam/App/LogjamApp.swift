@@ -6,12 +6,21 @@ struct LogjamApp: App {
     let modelContainer: ModelContainer
 
     init() {
-        do {
-            let schema = Schema([Release.self, ListenLogEntry.self])
-            let configuration = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
-            modelContainer = try ModelContainer(for: schema, configurations: [configuration])
-        } catch {
-            fatalError("Failed to initialize ModelContainer: \(error)")
+        let schema = Schema([Release.self, ListenLogEntry.self])
+        let cloudKitConfiguration = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
+        if let container = try? ModelContainer(for: schema, configurations: [cloudKitConfiguration]) {
+            modelContainer = container
+        } else {
+            // The iCloud container is registered under the original developer's Apple ID.
+            // On a sideloaded install signed under a different Apple ID, CloudKit may not
+            // provision — fall back to a local-only store so the app still works (just
+            // without cross-device sync) instead of crashing at launch.
+            let localConfiguration = ModelConfiguration(schema: schema, cloudKitDatabase: .none)
+            do {
+                modelContainer = try ModelContainer(for: schema, configurations: [localConfiguration])
+            } catch {
+                fatalError("Failed to initialize ModelContainer: \(error)")
+            }
         }
         Self.migrateToHalfStarRatingsIfNeeded(modelContainer: modelContainer)
     }

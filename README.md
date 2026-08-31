@@ -16,6 +16,16 @@ This is a single-user project built for my own collection — the bundle identif
    - A personal access token from [discogs.com/settings/developers](https://www.discogs.com/settings/developers)
 7. Go to **Library** and pull to refresh (or tap the sync button) to import your collection.
 
+## Installing without building anything
+
+You don't need Xcode, XcodeGen, or a GitHub account to just run the app — only to modify it. If you have [AltStore](https://altstore.io) and AltServer set up:
+
+1. In AltStore: **Browse** tab → `+` → paste in `https://raw.githubusercontent.com/LanceCo/logjam/main/altstore-source.json` → Add.
+2. Install Logjam from the source. AltServer signs it with your own Apple ID, the same as any other AltStore app.
+3. In **Settings**, enter your own Discogs username and personal access token — everything's per-installation, nothing is shared with mine.
+
+Note: iCloud sync is tied to my Apple ID's iCloud container, so it likely won't work on your install — the app falls back to a local-only store in that case rather than failing to launch. Your collection and logs still work fine on-device; they just won't sync across your own devices the way they would on mine.
+
 ## Regenerating the project
 
 The `.xcodeproj` is generated from [project.yml](project.yml) and is gitignored. After pulling changes or editing `project.yml`, re-run:
