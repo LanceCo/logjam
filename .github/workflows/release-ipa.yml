@@ -33,7 +33,6 @@ jobs:
       # Apple ID cert) when you install/update through AltStore on your phone.
       - name: Build unsigned app
         run: |
-          VERSION_NUMBER="${GITHUB_REF_NAME#v}"
           xcodebuild build \
             -project Logjam.xcodeproj \
             -scheme Logjam \
@@ -41,9 +40,18 @@ jobs:
             -configuration Release \
             -derivedDataPath build_ios \
             CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            MARKETING_VERSION="$VERSION_NUMBER" \
-            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER"
+            CODE_SIGNING_REQUIRED=NO
+
+      # XcodeGen bakes a literal CFBundleShortVersionString/CFBundleVersion into the
+      # generated Info.plist, so passing MARKETING_VERSION on the xcodebuild command
+      # line above is silently ignored. Stamp the real version in after the build
+      # instead — this is what AltStore checks its source's "version" field against.
+      - name: Stamp version into Info.plist
+        run: |
+          VERSION_NUMBER="${GITHUB_REF_NAME#v}"
+          APP_PATH="build_ios/Build/Products/Release-iphoneos/Logjam.app"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION_NUMBER" "$APP_PATH/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" "$APP_PATH/Info.plist"
 
       # ldid embeds the entitlements (iCloud/CloudKit) directly into the binary
       # with a throwaway ad-hoc signature. AltServer reads that entitlement set
