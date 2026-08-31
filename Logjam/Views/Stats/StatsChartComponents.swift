@@ -26,8 +26,43 @@ struct MonthlyBarChart: View {
         }
         .chartXScale(domain: domain)
         .chartXAxis {
-            AxisMarks(values: .stride(by: .month)) { _ in
+            AxisMarks(values: .automatic(desiredCount: 6)) { _ in
                 AxisValueLabel(format: .dateTime.month(.abbreviated).year(.twoDigits))
+                    .foregroundStyle(LJTheme.textSecondary)
+            }
+        }
+        .chartYAxis {
+            AxisMarks { _ in
+                AxisValueLabel().foregroundStyle(LJTheme.textSecondary)
+                AxisGridLine().foregroundStyle(LJTheme.surface)
+            }
+        }
+        .frame(height: 140)
+    }
+}
+
+struct CollectionGrowthChart: View {
+    let data: [(month: Date, total: Int)]
+
+    var body: some View {
+        Chart(data, id: \.month) { point in
+            AreaMark(
+                x: .value("Month", point.month, unit: .month),
+                y: .value("Total", point.total)
+            )
+            .interpolationMethod(.stepEnd)
+            .foregroundStyle(LJTheme.accent.opacity(0.2))
+
+            LineMark(
+                x: .value("Month", point.month, unit: .month),
+                y: .value("Total", point.total)
+            )
+            .interpolationMethod(.stepEnd)
+            .foregroundStyle(LJTheme.accent)
+        }
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: 6)) { _ in
+                AxisValueLabel(format: .dateTime.year())
                     .foregroundStyle(LJTheme.textSecondary)
             }
         }

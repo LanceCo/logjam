@@ -37,10 +37,18 @@ struct StatsAggregator {
         Self.bucketByMonth(logEntries.map(\.date))
     }
 
-    var additionsByMonth: [(month: Date, count: Int)]? {
+    /// Running total of collection size over time, rather than additions-per-month: a
+    /// single bulk import (e.g. cataloging an existing physical collection all at once)
+    /// would otherwise produce one bar that dwarfs every other month. As a cumulative
+    /// total, that same import just reads as one steep step in an otherwise-legible curve.
+    var collectionGrowth: [(month: Date, total: Int)]? {
         let dates = activeReleases.compactMap(\.dateAdded)
         guard !dates.isEmpty else { return nil }
-        return Self.bucketByMonth(dates)
+        var runningTotal = 0
+        return Self.bucketByMonth(dates).map { entry in
+            runningTotal += entry.count
+            return (month: entry.month, total: runningTotal)
+        }
     }
 
     var genreCounts: [(genre: String, count: Int)] {

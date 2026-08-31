@@ -31,9 +31,9 @@ struct StatsView: View {
                             sectionDivider
                             activitySection
 
-                            if let additionsByMonth = stats.additionsByMonth {
+                            if let collectionGrowth = stats.collectionGrowth {
                                 sectionDivider
-                                growthSection(additionsByMonth)
+                                growthSection(collectionGrowth)
                             }
 
                             if !stats.genreCounts.isEmpty {
@@ -113,10 +113,10 @@ struct StatsView: View {
         }
     }
 
-    private func growthSection(_ data: [(month: Date, count: Int)]) -> some View {
+    private func growthSection(_ data: [(month: Date, total: Int)]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Collection Growth").font(.displayHeadline())
-            MonthlyBarChart(data: data)
+            CollectionGrowthChart(data: data)
         }
     }
 
