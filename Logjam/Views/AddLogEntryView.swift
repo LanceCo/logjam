@@ -29,13 +29,16 @@ struct AddLogEntryView: View {
                 HStack {
                     Text("Rating")
                     Spacer()
-                    StarRatingView(rating: $stars)
+                    StarRatingView(rating: $stars, color: LJTheme.accent)
                 }
 
                 Toggle(isOn: $loved) {
                     Label("Loved it", systemImage: "heart.fill")
                 }
+                .sensoryFeedback(.impact(weight: .light), trigger: loved)
             }
+            .scrollContentBackground(.hidden)
+            .background(LJTheme.background)
             .navigationTitle(isEditing ? "Edit Listen" : "Log a Listen")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

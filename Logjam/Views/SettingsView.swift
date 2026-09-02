@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+
     @State private var username: String = ""
     @State private var token: String = ""
     @State private var saveMessage: String?
@@ -20,7 +22,7 @@ struct SettingsView: View {
                 }
 
                 if let saveMessage {
-                    Text(saveMessage).foregroundStyle(.secondary)
+                    Text(saveMessage).foregroundStyle(LJTheme.textSecondary)
                 }
 
                 Section {
@@ -31,6 +33,11 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .background(LJTheme.background)
             .navigationTitle("Settings")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
             .onAppear(perform: load)
         }
     }

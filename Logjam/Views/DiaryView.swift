@@ -61,10 +61,10 @@ struct DiaryView: View {
             }
             .overlay {
                 if logEntries.isEmpty {
-                    ContentUnavailableView(
-                        "Nothing Spinning Yet",
-                        systemImage: "book.closed",
-                        description: Text("Log a listen from an album page to start your diary.")
+                    LJEmptyStateView(
+                        icon: "book.closed",
+                        title: "Nothing Spinning Yet",
+                        description: "Log a listen from an album page to start your diary."
                     )
                 }
             }

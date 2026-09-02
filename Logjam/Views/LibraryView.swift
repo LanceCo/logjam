@@ -93,12 +93,17 @@ struct LibraryView: View {
                         case .list:
                             List {
                                 ForEach(groupedReleases, id: \.letter) { group in
-                                    Section(header: Text(group.letter)) {
+                                    Section {
                                         ForEach(group.releases) { release in
                                             NavigationLink(value: release) {
                                                 LibraryRow(release: release)
                                             }
                                         }
+                                    } header: {
+                                        Text(group.letter)
+                                            .font(.displayHeadline())
+                                            .foregroundStyle(LJTheme.textSecondary)
+                                            .textCase(nil)
                                     }
                                     .id(group.letter)
                                 }
@@ -108,17 +113,18 @@ struct LibraryView: View {
                             .background(LJTheme.background)
                         case .grid:
                             ScrollView {
-                                LazyVStack(alignment: .leading, spacing: 20) {
+                                LazyVStack(alignment: .leading, spacing: LJTheme.Spacing.xl) {
                                     ForEach(groupedReleases, id: \.letter) { group in
-                                        VStack(alignment: .leading, spacing: 8) {
+                                        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
                                             Text(group.letter)
                                                 .font(.displayHeadline())
                                                 .foregroundStyle(LJTheme.textSecondary)
-                                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 12)], spacing: 12) {
+                                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: LJTheme.Spacing.md)], spacing: LJTheme.Spacing.md) {
                                                 ForEach(group.releases) { release in
                                                     NavigationLink(value: release) {
                                                         LibraryGridCell(release: release)
                                                     }
+                                                    .buttonStyle(.ljPressable)
                                                 }
                                             }
                                         }
@@ -135,6 +141,17 @@ struct LibraryView: View {
                         AlphabetIndexView(letters: groupedReleases.map(\.letter)) { letter in
                             proxy.scrollTo(letter, anchor: .top)
                         }
+                    }
+                }
+                .overlay {
+                    if groupedReleases.isEmpty {
+                        LJEmptyStateView(
+                            icon: "magnifyingglass",
+                            title: hasActiveFilters || !searchText.isEmpty ? "No Matches" : "No Records Yet",
+                            description: hasActiveFilters || !searchText.isEmpty
+                                ? "Try adjusting your filters or search."
+                                : "Sync your Discogs collection to see it here."
+                        )
                     }
                 }
                 }
@@ -173,6 +190,10 @@ struct LibraryView: View {
             }, message: {
                 Text(syncService.lastError ?? "")
             })
+            .sensoryFeedback(.success, trigger: syncService.isSyncing) { old, new in
+                old && !new && syncService.lastError == nil
+            }
+            .sensoryFeedback(.error, trigger: syncService.lastError)
             .onChange(of: selectedTab) { _, newTab in
                 guard newTab == .library else { return }
                 if let pending = filterRequest.pendingStatusFilter {
@@ -187,7 +208,7 @@ struct LibraryView: View {
     }
 
     private var filterBar: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: LJTheme.Spacing.sm) {
             Menu {
                 Picker("Genre", selection: $genreFilter) {
                     Text("All Genres").tag(String?.none)
@@ -230,7 +251,7 @@ struct LibraryView: View {
             Spacer()
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, LJTheme.Spacing.sm)
         .background(LJTheme.background)
     }
 
@@ -280,7 +301,7 @@ private struct LibraryGridCell: View {
     let release: Release
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: LJTheme.Spacing.xs) {
             ZStack(alignment: .topTrailing) {
                 CachedAsyncImage(url: release.coverImageURL) { image in
                     image.resizable().aspectRatio(contentMode: .fill)
@@ -293,7 +314,7 @@ private struct LibraryGridCell: View {
                 if release.isListened {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(LJTheme.accent)
-                        .padding(4)
+                        .padding(LJTheme.Spacing.xs)
                 }
             }
             Text(release.artistName)

@@ -14,14 +14,14 @@ struct StatsView: View {
         NavigationStack {
             Group {
                 if logEntries.isEmpty {
-                    ContentUnavailableView(
-                        "No Stats Yet",
-                        systemImage: "chart.bar",
-                        description: Text("Log a listen from an album page to start building your stats.")
+                    LJEmptyStateView(
+                        icon: "chart.bar",
+                        title: "No Stats Yet",
+                        description: "Log a listen from an album page to start building your stats."
                     )
                 } else {
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 32) {
+                        VStack(alignment: .leading, spacing: LJTheme.Spacing.xxl) {
                             summaryTiles
 
                             if !stats.genreCounts.isEmpty {
@@ -88,9 +88,9 @@ struct StatsView: View {
             .filter { !$0.isRemovedFromDiscogs && $0.isListened }
             .sorted { ($0.logEntries?.map(\.date).max() ?? .distantPast) > ($1.logEntries?.map(\.date).max() ?? .distantPast) }
 
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
             Text("Logged Albums").font(.displayHeadline())
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 8)], spacing: 8) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: LJTheme.Spacing.sm)], spacing: LJTheme.Spacing.sm) {
                 ForEach(loggedReleases) { release in
                     NavigationLink(value: release) {
                         CachedAsyncImage(url: release.coverImageURL) { image in
@@ -101,34 +101,35 @@ struct StatsView: View {
                         .aspectRatio(1, contentMode: .fill)
                         .coverArtStyle()
                     }
+                    .buttonStyle(.ljPressable)
                 }
             }
         }
     }
 
     private var activitySection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
             Text("Listening Activity").font(.displayHeadline())
             MonthlyBarChart(data: stats.activityByMonth)
         }
     }
 
     private func growthSection(_ data: [(month: Date, total: Int)]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
             Text("Collection Growth").font(.displayHeadline())
             CollectionGrowthChart(data: data)
         }
     }
 
     private var genresSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
             Text("Genres").font(.displayHeadline())
             GenreBarChart(data: stats.genreCounts)
         }
     }
 
     private var ratingsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: LJTheme.Spacing.md) {
             Text("Ratings").font(.displayHeadline())
 
             if let average = stats.averageRating {
@@ -149,7 +150,7 @@ struct StatsView: View {
     }
 
     private var topArtistsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
             Text("Top Artists").font(.displayHeadline())
             VStack(spacing: 6) {
                 ForEach(Array(stats.topArtists.enumerated()), id: \.offset) { index, entry in
@@ -171,7 +172,7 @@ struct StatsView: View {
     }
 
     private var collectionSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: LJTheme.Spacing.lg) {
             Text("Collection Breakdown").font(.displayHeadline())
             SplitProportionBar(
                 leftLabel: "Listened",
@@ -189,7 +190,7 @@ struct StatsView: View {
     }
 
     private var milestonesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
             Text("Milestones").font(.displayHeadline())
 
             if let first = stats.firstLogged {
@@ -211,7 +212,7 @@ struct StatsView: View {
     }
 
     private func statTile(text: String, label: String) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: LJTheme.Spacing.xxs) {
             Text(text).font(.displayTitle(22))
             Text(label).font(.caption).foregroundStyle(LJTheme.textSecondary)
         }
@@ -228,7 +229,7 @@ struct StatsView: View {
         Group {
             if let release = entry.release {
                 NavigationLink(value: release) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: LJTheme.Spacing.md) {
                         CachedAsyncImage(url: release.coverImageURL) { image in
                             image.resizable().aspectRatio(contentMode: .fill)
                         } placeholder: {
@@ -237,7 +238,7 @@ struct StatsView: View {
                         .frame(width: 44, height: 44)
                         .coverArtStyle()
 
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: LJTheme.Spacing.xxs) {
                             Text(release.title).font(.subheadline).bold().foregroundStyle(LJTheme.textPrimary)
                             Text(release.artistName).font(.caption).foregroundStyle(LJTheme.textSecondary)
                         }

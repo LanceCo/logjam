@@ -48,10 +48,10 @@ struct SellQueueView: View {
             }
             .overlay {
                 if sellReleases.isEmpty {
-                    ContentUnavailableView(
-                        "Crate's Clean",
-                        systemImage: "tag",
-                        description: Text("Flag a record as \"Sell\" from its album page to add it here.")
+                    LJEmptyStateView(
+                        icon: "tag",
+                        title: "Crate's Clean",
+                        description: "Flag a record as \"Sell\" from its album page to add it here."
                     )
                 }
             }

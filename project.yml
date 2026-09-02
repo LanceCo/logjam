@@ -19,7 +19,8 @@ targets:
       path: Generated/Info.plist
       properties:
         CFBundleDisplayName: Logjam
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIColorName: LaunchBackground
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
     entitlements:

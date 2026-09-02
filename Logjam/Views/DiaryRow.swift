@@ -6,7 +6,7 @@ struct DiaryRow: View {
     var showDate: Bool = true
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: LJTheme.Spacing.md) {
             CachedAsyncImage(url: release.coverImageURL) { image in
                 image.resizable().aspectRatio(contentMode: .fill)
             } placeholder: {
@@ -15,20 +15,20 @@ struct DiaryRow: View {
             .frame(width: 44, height: 44)
             .coverArtStyle()
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: LJTheme.Spacing.xxs) {
                 Text(release.title).font(.subheadline).bold().foregroundStyle(LJTheme.textPrimary)
                 Text(release.artistName).font(.caption).foregroundStyle(LJTheme.textSecondary)
             }
 
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: LJTheme.Spacing.xxs) {
                 if showDate {
                     Text(entry.date.formatted(date: .abbreviated, time: .omitted))
                         .font(.caption2)
                         .foregroundStyle(LJTheme.textSecondary)
                 }
-                HStack(spacing: 2) {
+                HStack(spacing: LJTheme.Spacing.xxs) {
                     if entry.loved {
                         Image(systemName: "heart.fill")
                             .foregroundStyle(LJTheme.loved)

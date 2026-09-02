@@ -15,7 +15,7 @@ struct AlbumDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: LJTheme.Spacing.lg) {
                 ZStack(alignment: .bottomLeading) {
                     GeometryReader { geo in
                         CachedAsyncImage(url: release.coverImageURL) { image in
@@ -34,7 +34,7 @@ struct AlbumDetailView: View {
                         endPoint: .bottom
                     )
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: LJTheme.Spacing.xs) {
                         Text(release.title)
                             .font(.displayTitle(30))
                             .foregroundStyle(.white)
@@ -73,18 +73,18 @@ struct AlbumDetailView: View {
                     ProgressView()
                 } else {
                     if let tracklist = release.cachedTracklist, !tracklist.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
                             disclosureHeader("Tracklist", isExpanded: $isTracklistExpanded)
                             if isTracklistExpanded {
                                 ForEach(tracklist, id: \.position) { track in
                                     HStack(alignment: .top) {
                                         Text(track.position)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(LJTheme.textSecondary)
                                             .frame(width: 36, alignment: .leading)
                                         Text(track.title)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                         if let duration = track.duration {
-                                            Text(duration).foregroundStyle(.secondary)
+                                            Text(duration).foregroundStyle(LJTheme.textSecondary)
                                         }
                                     }
                                 }
@@ -92,7 +92,7 @@ struct AlbumDetailView: View {
                         }
                     }
                     if let credits = release.cachedCredits, !credits.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
                             disclosureHeader("Production Credits", isExpanded: $isCreditsExpanded)
                             if isCreditsExpanded {
                                 ForEach(Array(credits.enumerated()), id: \.offset) { _, credit in
@@ -100,7 +100,7 @@ struct AlbumDetailView: View {
                                         Text(credit.name)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                         Text(credit.role)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(LJTheme.textSecondary)
                                             .multilineTextAlignment(.trailing)
                                     }
                                 }
@@ -112,7 +112,7 @@ struct AlbumDetailView: View {
                 Divider()
 
                 HStack {
-                    Text("Listen Log").font(.headline)
+                    Text("Listen Log").font(.displayHeadline())
                     Spacer()
                     Button {
                         isShowingAddLog = true

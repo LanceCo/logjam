@@ -53,12 +53,12 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 32) {
+                VStack(alignment: .leading, spacing: LJTheme.Spacing.xxl) {
                     HStack(spacing: 10) {
                         Image("AppLogo")
                             .resizable()
                             .frame(width: 40, height: 40)
-                            .clipShape(RoundedRectangle(cornerRadius: 9))
+                            .clipShape(RoundedRectangle(cornerRadius: LJTheme.Corner.sm))
                         Text("Logjam").font(.displayTitle(32)).foregroundStyle(LJTheme.textPrimary)
                     }
 
@@ -82,20 +82,20 @@ struct HomeView: View {
                     sectionDivider
 
                     if !recentLovedReleases.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
                             Text("Recently Loved").font(.displayHeadline())
                             posterGrid(recentLovedReleases, columns: 4)
                         }
                     }
 
                     if !recentlyAddedReleases.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
                             Text("Recently Added").font(.displayHeadline())
                             posterGrid(recentlyAddedReleases, columns: 5)
                         }
                     }
 
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
                         HStack {
                             Text("Recent Activity").font(.displayHeadline())
                             Spacer()
@@ -122,7 +122,7 @@ struct HomeView: View {
                             }
                         }
                     }
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: LJTheme.Spacing.lg) {
                         sectionDivider
                         pickForMeButton
                     }
@@ -155,7 +155,7 @@ struct HomeView: View {
     }
 
     private func statTile(value: Int, label: String) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: LJTheme.Spacing.xxs) {
             Text("\(value)").font(.displayTitle(22))
             Text(label).font(.caption).foregroundStyle(LJTheme.textSecondary)
         }
@@ -163,7 +163,7 @@ struct HomeView: View {
     }
 
     private func posterGrid(_ releases: [Release], columns: Int) -> some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns), spacing: 8) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: LJTheme.Spacing.sm), count: columns), spacing: LJTheme.Spacing.sm) {
             ForEach(releases) { release in
                 NavigationLink(value: release) {
                     CachedAsyncImage(url: release.coverImageURL) { image in
@@ -175,6 +175,7 @@ struct HomeView: View {
                     .clipped()
                     .coverArtStyle()
                 }
+                .buttonStyle(.ljPressable)
             }
         }
     }
@@ -194,7 +195,7 @@ struct HomeView: View {
                 Spacer()
                 HStack(spacing: 0) {
                     Button(action: pickForMe) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: LJTheme.Spacing.sm) {
                             Image(systemName: "shuffle")
                             Text("Pick for Me").fontWeight(.semibold)
                         }

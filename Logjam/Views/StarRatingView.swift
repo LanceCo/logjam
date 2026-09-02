@@ -7,8 +7,8 @@ struct StarRatingView: View {
     @Binding var rating: Double
     var isInteractive: Bool = true
     var iconSize: CGFloat = 22
-    var spacing: CGFloat = 4
-    var color: Color = .yellow
+    var spacing: CGFloat = LJTheme.Spacing.xs
+    var color: Color = LJTheme.accent
 
     private var starWidth: CGFloat { iconSize + spacing }
 
@@ -22,6 +22,7 @@ struct StarRatingView: View {
         }
         .contentShape(Rectangle())
         .gesture(isInteractive ? dragGesture : nil)
+        .sensoryFeedback(.selection, trigger: rating) { _, _ in isInteractive }
     }
 
     private func image(for index: Int) -> Image {

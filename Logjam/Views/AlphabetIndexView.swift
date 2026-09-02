@@ -11,7 +11,7 @@ struct AlphabetIndexView: View {
                     Text(letter)
                         .font(.caption2)
                         .fontWeight(.bold)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(LJTheme.textSecondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
