@@ -23,6 +23,7 @@ targets:
           UIColorName: LaunchBackground
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
+        ITSAppUsesNonExemptEncryption: false
     entitlements:
       path: Generated/Logjam.entitlements
       properties:
