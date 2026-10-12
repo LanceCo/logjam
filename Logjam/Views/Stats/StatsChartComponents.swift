@@ -106,6 +106,48 @@ struct GenreBarChart: View {
     }
 }
 
+/// Count of active releases per decade, oldest to newest, left to right. Same visual
+/// language as CollectionGrowthChart (area + line) — decade labels live on the x-axis,
+/// where Swift Charts handles spacing/thinning itself, rather than as floating annotations
+/// that can overlap when a narrow bar's label is wider than the bar.
+struct DecadeTrendChart: View {
+    let data: [(decade: String, count: Int)]
+
+    var body: some View {
+        Chart(data, id: \.decade) { point in
+            AreaMark(
+                x: .value("Decade", point.decade),
+                y: .value("Count", point.count)
+            )
+            .foregroundStyle(LJTheme.accent.opacity(0.2))
+
+            LineMark(
+                x: .value("Decade", point.decade),
+                y: .value("Count", point.count)
+            )
+            .foregroundStyle(LJTheme.accent)
+
+            PointMark(
+                x: .value("Decade", point.decade),
+                y: .value("Count", point.count)
+            )
+            .foregroundStyle(LJTheme.accent)
+        }
+        .chartXAxis {
+            AxisMarks { _ in
+                AxisValueLabel().foregroundStyle(LJTheme.textSecondary)
+            }
+        }
+        .chartYAxis {
+            AxisMarks { _ in
+                AxisValueLabel().foregroundStyle(LJTheme.textSecondary)
+                AxisGridLine().foregroundStyle(LJTheme.surface)
+            }
+        }
+        .frame(height: 140)
+    }
+}
+
 struct FormatPieChart: View {
     let data: [(format: String, count: Int)]
 

@@ -122,6 +122,11 @@ struct StatsView: View {
             formatsSection
         }
 
+        if !stats.decadeCounts.isEmpty {
+            sectionDivider
+            decadesSection
+        }
+
         sectionDivider
         collectionSection
     }
@@ -334,6 +339,13 @@ struct StatsView: View {
         VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
             Text("Formats").font(.displayHeadline())
             FormatPieChart(data: stats.formatCounts)
+        }
+    }
+
+    private var decadesSection: some View {
+        VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
+            Text("Decades").font(.displayHeadline())
+            DecadeTrendChart(data: stats.decadeCounts)
         }
     }
 

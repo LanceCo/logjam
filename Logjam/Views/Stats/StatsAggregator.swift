@@ -181,6 +181,19 @@ struct StatsAggregator {
         Set(activeReleases.flatMap(\.genres)).count
     }
 
+    /// Collection breakdown by decade of original release year, oldest first — chronological
+    /// order tells a better story here than count-ranked order would.
+    var decadeCounts: [(decade: String, count: Int)] {
+        let decades = activeReleases.compactMap { release -> Int? in
+            guard let year = release.year else { return nil }
+            return (year / 10) * 10
+        }
+        let grouped = Dictionary(grouping: decades) { $0 }
+        return grouped.keys.sorted().map { decade in
+            (decade: "\(decade)s", count: grouped[decade]!.count)
+        }
+    }
+
     /// Vinyl format breakdown across the active collection (LP, 7", 10", etc.), most common first.
     var formatCounts: [(format: String, count: Int)] {
         Self.rankedCounts(of: activeReleases.compactMap(\.vinylType))

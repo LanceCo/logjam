@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct AlbumDetailView: View {
     @Bindable var release: Release
@@ -166,6 +167,7 @@ struct AlbumDetailView: View {
                 }
             }
         }
+        .background(SwipeBackEnabler())
         .sheet(isPresented: $isShowingAddLog) {
             AddLogEntryView(release: release)
         }
@@ -248,4 +250,22 @@ private struct LogEntryRow: View {
         }
         .font(.subheadline)
     }
+}
+
+/// `navigationBarBackButtonHidden(true)` (used above so our custom accent-colored back
+/// button replaces the system one, which otherwise renders white over the hero image) also
+/// disables NavigationStack's interactive swipe-to-go-back gesture as a side effect. This
+/// reaches into the hosting UINavigationController to force it back on.
+private struct SwipeBackEnabler: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        let controller = UIViewController()
+        controller.view.isHidden = true
+        DispatchQueue.main.async {
+            controller.navigationController?.interactivePopGestureRecognizer?.delegate = nil
+            controller.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+        }
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
