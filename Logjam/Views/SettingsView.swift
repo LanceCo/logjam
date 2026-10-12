@@ -29,6 +29,19 @@ struct SettingsView: View {
                     Link("Generate a token on Discogs", destination: URL(string: "https://www.discogs.com/settings/developers")!)
                         .foregroundStyle(LJTheme.accent)
                 }
+
+                Section("About") {
+                    HStack {
+                        Text("Version")
+                        Spacer()
+                        Text(appVersionString).foregroundStyle(LJTheme.textSecondary)
+                    }
+                    Text("© \(copyrightYear) Lance Conzett")
+                        .foregroundStyle(LJTheme.textSecondary)
+                    Text("Logjam is a personal project and isn't affiliated with or endorsed by Discogs.")
+                        .font(.caption)
+                        .foregroundStyle(LJTheme.textSecondary)
+                }
             }
             .scrollContentBackground(.hidden)
             .background(LJTheme.background)
@@ -40,6 +53,17 @@ struct SettingsView: View {
             }
             .onAppear(perform: load)
         }
+    }
+
+    private var appVersionString: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "—"
+        let build = info?["CFBundleVersion"] as? String ?? "—"
+        return "\(version) (\(build))"
+    }
+
+    private var copyrightYear: String {
+        String(Calendar.current.component(.year, from: .now))
     }
 
     private func load() {

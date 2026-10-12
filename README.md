@@ -16,16 +16,6 @@ This is a single-user project built for my own collection — the bundle identif
    - A personal access token from [discogs.com/settings/developers](https://www.discogs.com/settings/developers)
 7. Go to **Library** and pull to refresh (or tap the sync button) to import your collection.
 
-## Installing without building anything
-
-You don't need Xcode, XcodeGen, or a GitHub account to just run the app — only to modify it. If you have [AltStore](https://altstore.io) and AltServer set up:
-
-1. In AltStore: **Browse** tab → `+` → paste in `https://raw.githubusercontent.com/LanceCo/logjam/main/altstore-source.json` → Add.
-2. Install Logjam from the source. AltServer signs it with your own Apple ID, the same as any other AltStore app.
-3. In **Settings**, enter your own Discogs username and personal access token — everything's per-installation, nothing is shared with mine.
-
-Note: iCloud sync is tied to my Apple ID's iCloud container, so it likely won't work on your install — the app falls back to a local-only store in that case rather than failing to launch. Your collection and logs still work fine on-device; they just won't sync across your own devices the way they would on mine.
-
 ## Regenerating the project
 
 The `.xcodeproj` is generated from [project.yml](project.yml) and is gitignored. After pulling changes or editing `project.yml`, re-run:
@@ -34,21 +24,6 @@ The `.xcodeproj` is generated from [project.yml](project.yml) and is gitignored.
 xcodegen generate
 ```
 
-## Shipping a new build via AltStore
+## Shipping a new build
 
-This section documents my own deployment pipeline, not a general project feature — it's wired to my GitHub repo and my AltStore source. Reusing it for your own fork means updating the source URL in step 2 below and the `iconURL`/`sourceURL` fields in [altstore-source.json](altstore-source.json) to point at your own repo.
-
-Once set up (see below), getting a code change onto my phone is just:
-
-```
-git tag v1.2.0
-git push --tags
-```
-
-That triggers [.github/workflows/release-ipa.yml](.github/workflows/release-ipa.yml), which builds an unsigned `.ipa`, attaches it to a GitHub Release, and updates [altstore-source.json](altstore-source.json) to point at it. Open AltStore on my phone (AltServer running on my Mac, same Wi-Fi), pull to refresh the source, and tap Update.
-
-### One-time setup
-
-1. In the repo's GitHub Settings → Actions → General → Workflow permissions, select **Read and write permissions** (needed so the workflow can create releases and commit `altstore-source.json` back to `main`).
-2. In AltStore on my phone: **Browse** tab → the `+` in the top-left → paste in `https://raw.githubusercontent.com/LanceCo/logjam/main/altstore-source.json` → Add.
-3. Tag and push a release as above. Check the Actions tab on GitHub if it doesn't show up in AltStore within a few minutes.
+Builds ship via Xcode Cloud to TestFlight. Pushing to `main` (or tagging a release, depending on how the Xcode Cloud workflow is configured) triggers a build; Xcode Cloud regenerates the Xcode project via [ci_scripts/ci_post_clone.sh](ci_scripts/ci_post_clone.sh) since `Logjam.xcodeproj` is gitignored. Install updates through the TestFlight app.

@@ -21,9 +21,12 @@ final class Release {
     @Relationship(deleteRule: .cascade, inverse: \ListenLogEntry.release)
     var logEntries: [ListenLogEntry]? = []
 
-    // Cached Discogs release detail — tracklist/credits don't change, so this is fetched once.
+    // Cached Discogs release detail — tracklist/credits/labels don't change, so this is
+    // fetched once. `cachedLabels` was added after the others, so it's keyed off its own
+    // nil-ness (see AlbumDetailView.loadDetailIfNeeded) to backfill existing cached releases.
     var cachedTracklist: [DiscogsTrack]?
     var cachedCredits: [DiscogsCredit]?
+    var cachedLabels: [String]?
     var detailFetchedAt: Date?
 
     // Cached Discogs marketplace stats — prices move, so SellQueueView refreshes this on a TTL.
@@ -70,6 +73,23 @@ final class Release {
 
     var vinylType: String? {
         formatDescriptions.first { Self.vinylTypeTokens.contains($0) }
+    }
+
+    var discogsURL: URL {
+        URL(string: "https://www.discogs.com/release/\(discogsReleaseID)")!
+    }
+
+    /// Display-only version of `artistName` with Discogs' trailing disambiguator (e.g.
+    /// "Artist (2)", used when multiple distinct artists share a name) stripped. The raw
+    /// `artistName`/`artistSortName` keep the suffix so same-named artists still sort and
+    /// group independently.
+    var displayArtistName: String { Self.stripArtistDisambiguator(from: artistName) }
+
+    static func stripArtistDisambiguator(from name: String) -> String {
+        guard let range = name.range(of: #"\s\(\d+\)$"#, options: .regularExpression) else {
+            return name
+        }
+        return String(name[..<range.lowerBound])
     }
 }
 

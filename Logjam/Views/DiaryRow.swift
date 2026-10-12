@@ -17,7 +17,7 @@ struct DiaryRow: View {
 
             VStack(alignment: .leading, spacing: LJTheme.Spacing.xxs) {
                 Text(release.title).font(.subheadline).bold().foregroundStyle(LJTheme.textPrimary)
-                Text(release.artistName).font(.caption).foregroundStyle(LJTheme.textSecondary)
+                Text(release.displayArtistName).font(.caption).foregroundStyle(LJTheme.textSecondary)
             }
 
             Spacer()

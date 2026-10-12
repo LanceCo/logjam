@@ -14,7 +14,7 @@ DerivedData/
 .build/
 .swiftpm/
 
-# Local device builds (e.g. for AltStore sideloading)
+# Local device builds
 build_ios/
 *.ipa
 Payload/

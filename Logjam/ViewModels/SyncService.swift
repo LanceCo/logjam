@@ -5,11 +5,14 @@ import SwiftData
 final class SyncService: ObservableObject {
     @Published var isSyncing = false
     @Published var lastError: String?
+    @Published var lastSyncedAt: Date?
 
     private let client: DiscogsClient
+    private static let lastSyncedAtDefaultsKey = "SyncService.lastSyncedAt"
 
     init(client: DiscogsClient = DiscogsClient()) {
         self.client = client
+        self.lastSyncedAt = UserDefaults.standard.object(forKey: Self.lastSyncedAtDefaultsKey) as? Date
     }
 
     func sync(context: ModelContext) async {
@@ -35,6 +38,8 @@ final class SyncService: ObservableObject {
             }
             markRemovedReleases(excluding: seenReleaseIDs, context: context)
             try context.save()
+            lastSyncedAt = .now
+            UserDefaults.standard.set(lastSyncedAt, forKey: Self.lastSyncedAtDefaultsKey)
         } catch {
             lastError = error.localizedDescription
         }

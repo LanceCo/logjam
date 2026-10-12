@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
-    @Binding var selectedTab: AppTab
     @EnvironmentObject private var filterRequest: LibraryFilterRequest
 
     @Query(sort: [SortDescriptor(\ListenLogEntry.date, order: .reverse)])
@@ -100,7 +99,7 @@ struct HomeView: View {
                             Text("Recent Activity").font(.displayHeadline())
                             Spacer()
                             Button {
-                                selectedTab = .diary
+                                filterRequest.selectedTab = .diary
                             } label: {
                                 Image(systemName: "arrow.right")
                                     .font(.subheadline.weight(.semibold))
@@ -238,7 +237,7 @@ struct HomeView: View {
 
     private func showFiltered(_ status: StatusFilter) {
         filterRequest.pendingStatusFilter = status
-        selectedTab = .library
+        filterRequest.selectedTab = .library
     }
 
     private func pickForMe() {

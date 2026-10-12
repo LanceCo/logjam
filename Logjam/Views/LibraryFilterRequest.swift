@@ -16,8 +16,16 @@ enum StatusFilter: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-/// Lets Home's stat tiles deep-link into Library with a filter and grid view pre-applied.
+/// Shared cross-tab navigation state: which tab is active, plus one-shot requests other
+/// tabs can leave for Library to pick up (a filter from Home's stat tiles, an artist search
+/// from an album's detail page) the next time Library becomes active.
 @MainActor
 final class LibraryFilterRequest: ObservableObject {
+    @Published var selectedTab: AppTab = .home
     @Published var pendingStatusFilter: StatusFilter?
+    @Published var pendingArtistSearch: String?
+
+    /// The tab we were on before an artist-name tap sent us to Library. Drives the "Back"
+    /// affordance that undoes the jump if it was a misclick.
+    @Published var artistSearchOriginTab: AppTab?
 }

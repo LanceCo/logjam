@@ -1,15 +1,14 @@
 import SwiftUI
 
 struct RootView: View {
-    @State private var selectedTab: AppTab = .home
     @StateObject private var filterRequest = LibraryFilterRequest()
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            HomeView(selectedTab: $selectedTab)
+        TabView(selection: $filterRequest.selectedTab) {
+            HomeView()
                 .tabItem { Label("Home", systemImage: "house") }
                 .tag(AppTab.home)
-            LibraryView(selectedTab: $selectedTab)
+            LibraryView()
                 .tabItem { Label("Library", systemImage: "square.stack") }
                 .tag(AppTab.library)
             DiaryView()

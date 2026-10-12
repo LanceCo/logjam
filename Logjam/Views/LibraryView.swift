@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 
 struct LibraryView: View {
-    @Binding var selectedTab: AppTab
     @Environment(\.modelContext) private var modelContext
     @Query(sort: [SortDescriptor(\Release.artistSortName), SortDescriptor(\Release.year)])
     private var releases: [Release]
@@ -15,6 +14,8 @@ struct LibraryView: View {
     @State private var formatFilter: String?
     @State private var listenedFilter: StatusFilter = .all
     @State private var viewMode: ViewMode = .list
+    @State private var isShowingSettings = false
+    @State private var navigationPath = NavigationPath()
 
     enum ViewMode {
         case list
@@ -69,7 +70,9 @@ struct LibraryView: View {
             return String(first).uppercased()
         }
         return grouped.keys.sorted().map { letter in
-            (letter, grouped[letter]!.sorted { $0.artistSortName < $1.artistSortName })
+            (letter, grouped[letter]!.sorted {
+                $0.artistSortName.localizedCaseInsensitiveCompare($1.artistSortName) == .orderedAscending
+            })
         }
     }
 
@@ -82,7 +85,7 @@ struct LibraryView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 filterBar
 
@@ -95,9 +98,12 @@ struct LibraryView: View {
                                 ForEach(groupedReleases, id: \.letter) { group in
                                     Section {
                                         ForEach(group.releases) { release in
-                                            NavigationLink(value: release) {
+                                            Button {
+                                                navigationPath.append(release)
+                                            } label: {
                                                 LibraryRow(release: release)
                                             }
+                                            .buttonStyle(.plain)
                                         }
                                     } header: {
                                         Text(group.letter)
@@ -162,6 +168,18 @@ struct LibraryView: View {
             }
             .searchable(text: $searchText, prompt: "Search artist or album")
             .toolbar {
+                if let originTab = filterRequest.artistSearchOriginTab {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button {
+                            searchText = ""
+                            filterRequest.artistSearchOriginTab = nil
+                            filterRequest.selectedTab = originTab
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .foregroundStyle(LJTheme.accent)
+                        }
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         viewMode = (viewMode == .list) ? .grid : .list
@@ -170,13 +188,24 @@ struct LibraryView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        Task { await syncService.sync(context: modelContext) }
+                    Menu {
+                        Section(lastSyncedLabel) {
+                            Button {
+                                Task { await syncService.sync(context: modelContext) }
+                            } label: {
+                                Label("Resync", systemImage: "arrow.triangle.2.circlepath")
+                            }
+                        }
+                        Button {
+                            isShowingSettings = true
+                        } label: {
+                            Label("Settings", systemImage: "slider.horizontal.3")
+                        }
                     } label: {
                         if syncService.isSyncing {
                             ProgressView()
                         } else {
-                            Label("Sync", systemImage: "arrow.triangle.2.circlepath")
+                            Image(systemName: "gearshape")
                         }
                     }
                     .disabled(syncService.isSyncing)
@@ -184,6 +213,9 @@ struct LibraryView: View {
             }
             .refreshable {
                 await syncService.sync(context: modelContext)
+            }
+            .sheet(isPresented: $isShowingSettings) {
+                SettingsView()
             }
             .alert("Sync Error", isPresented: .constant(syncService.lastError != nil), actions: {
                 Button("OK") { syncService.lastError = nil }
@@ -194,17 +226,37 @@ struct LibraryView: View {
                 old && !new && syncService.lastError == nil
             }
             .sensoryFeedback(.error, trigger: syncService.lastError)
-            .onChange(of: selectedTab) { _, newTab in
+            .onChange(of: filterRequest.selectedTab) { _, newTab in
                 guard newTab == .library else { return }
                 if let pending = filterRequest.pendingStatusFilter {
                     listenedFilter = pending
                     viewMode = .grid
                     filterRequest.pendingStatusFilter = nil
-                } else {
+                    filterRequest.artistSearchOriginTab = nil
+                } else if filterRequest.pendingArtistSearch == nil {
                     clearFilters()
+                    filterRequest.artistSearchOriginTab = nil
+                }
+            }
+            .onChange(of: filterRequest.pendingArtistSearch) { _, newValue in
+                guard let artist = newValue else { return }
+                clearFilters()
+                navigationPath = NavigationPath()
+                searchText = artist
+                viewMode = .list
+                filterRequest.pendingArtistSearch = nil
+            }
+            .onChange(of: searchText) { _, newValue in
+                if newValue.isEmpty {
+                    filterRequest.artistSearchOriginTab = nil
                 }
             }
         }
+    }
+
+    private var lastSyncedLabel: String {
+        guard let date = syncService.lastSyncedAt else { return "Never synced" }
+        return "Last synced \(date.formatted(.relative(presentation: .named)))"
     }
 
     private var filterBar: some View {
@@ -283,7 +335,7 @@ private struct LibraryRow: View {
             .coverArtStyle()
 
             VStack(alignment: .leading) {
-                Text(release.artistName).font(.headline).foregroundStyle(LJTheme.textPrimary)
+                Text(release.displayArtistName).font(.headline).foregroundStyle(LJTheme.textPrimary)
                 Text(release.title).font(.subheadline).foregroundStyle(LJTheme.textSecondary)
             }
 
@@ -317,7 +369,7 @@ private struct LibraryGridCell: View {
                         .padding(LJTheme.Spacing.xs)
                 }
             }
-            Text(release.artistName)
+            Text(release.displayArtistName)
                 .font(.caption)
                 .foregroundStyle(LJTheme.textPrimary)
                 .lineLimit(1)

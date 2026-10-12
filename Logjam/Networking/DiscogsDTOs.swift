@@ -66,6 +66,11 @@ struct DiscogsFormat: Decodable {
 struct DiscogsReleaseDetail: Decodable {
     let tracklist: [DiscogsTrack]
     let extraartists: [DiscogsCredit]?
+    let labels: [DiscogsLabel]?
+}
+
+struct DiscogsLabel: Codable {
+    let name: String
 }
 
 struct DiscogsTrack: Codable {

@@ -4,6 +4,8 @@ import SwiftData
 struct AlbumDetailView: View {
     @Bindable var release: Release
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var filterRequest: LibraryFilterRequest
     @State private var isShowingAddLog = false
     @State private var isLoadingDetail = false
     @State private var entryPendingDeletion: ListenLogEntry?
@@ -39,10 +41,20 @@ struct AlbumDetailView: View {
                             .font(.displayTitle(30))
                             .foregroundStyle(.white)
                             .lineLimit(2)
-                        Text(release.artistName)
-                            .font(.title3)
-                            .foregroundStyle(.white.opacity(0.85))
-                            .lineLimit(1)
+                        Button {
+                            searchForArtist()
+                        } label: {
+                            HStack(spacing: LJTheme.Spacing.sm) {
+                                Text(release.displayArtistName)
+                                    .font(.title3)
+                                    .foregroundStyle(.white.opacity(0.85))
+                                    .lineLimit(1)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2)
+                                    .foregroundStyle(.white.opacity(0.5))
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
@@ -62,6 +74,12 @@ struct AlbumDetailView: View {
                 }
                 .font(.subheadline)
                 .foregroundStyle(LJTheme.textSecondary)
+
+                Link(destination: release.discogsURL) {
+                    Label("View on Discogs", systemImage: "arrow.up.right.square")
+                }
+                .font(.subheadline)
+                .foregroundStyle(LJTheme.accent)
 
                 Picker("Status", selection: $release.keepSellStatus) {
                     Text("Keep").tag(KeepSellStatus.keep)
@@ -137,6 +155,17 @@ struct AlbumDetailView: View {
         .background(LJTheme.background)
         .navigationTitle(release.title)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .foregroundStyle(LJTheme.accent)
+                }
+            }
+        }
         .sheet(isPresented: $isShowingAddLog) {
             AddLogEntryView(release: release)
         }
@@ -167,13 +196,20 @@ struct AlbumDetailView: View {
         }
     }
 
+    private func searchForArtist() {
+        filterRequest.artistSearchOriginTab = filterRequest.selectedTab
+        filterRequest.pendingArtistSearch = release.displayArtistName
+        filterRequest.selectedTab = .library
+    }
+
     private func loadDetailIfNeeded() async {
-        guard release.detailFetchedAt == nil else { return }
+        guard release.detailFetchedAt == nil || release.cachedLabels == nil else { return }
         isLoadingDetail = true
         defer { isLoadingDetail = false }
         if let result = try? await client.fetchReleaseDetail(releaseID: release.discogsReleaseID) {
             release.cachedTracklist = result.tracklist
             release.cachedCredits = result.extraartists
+            release.cachedLabels = result.labels?.map(\.name) ?? []
             release.detailFetchedAt = .now
         }
     }

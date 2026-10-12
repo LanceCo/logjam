@@ -80,7 +80,7 @@ struct GenreBarChart: View {
     let data: [(genre: String, count: Int)]
 
     private var topGenres: [(genre: String, count: Int)] {
-        Array(data.prefix(8))
+        Array(data.prefix(15))
     }
 
     var body: some View {
@@ -103,6 +103,48 @@ struct GenreBarChart: View {
             }
         }
         .frame(height: CGFloat(topGenres.count) * 30 + 20)
+    }
+}
+
+struct FormatPieChart: View {
+    let data: [(format: String, count: Int)]
+
+    /// Shades of the single accent color, darkest-to-lightest by rank, rather than an
+    /// arbitrary multi-color palette — matches every other chart in the app.
+    private func sliceColor(for index: Int) -> Color {
+        LJTheme.accent.opacity(max(0.25, 1.0 - Double(index) * 0.18))
+    }
+
+    var body: some View {
+        HStack(spacing: LJTheme.Spacing.lg) {
+            Chart(Array(data.enumerated()), id: \.offset) { index, point in
+                SectorMark(
+                    angle: .value("Count", point.count),
+                    angularInset: 1.5
+                )
+                .cornerRadius(3)
+                .foregroundStyle(sliceColor(for: index))
+            }
+            .frame(width: 120, height: 120)
+
+            VStack(alignment: .leading, spacing: LJTheme.Spacing.sm) {
+                ForEach(Array(data.enumerated()), id: \.offset) { index, point in
+                    HStack(spacing: LJTheme.Spacing.sm) {
+                        Circle()
+                            .fill(sliceColor(for: index))
+                            .frame(width: 10, height: 10)
+                        Text(point.format)
+                            .font(.subheadline)
+                            .foregroundStyle(LJTheme.textPrimary)
+                        Spacer()
+                        Text("\(point.count)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(LJTheme.textSecondary)
+                    }
+                }
+            }
+        }
     }
 }
 
