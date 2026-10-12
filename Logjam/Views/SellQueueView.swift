@@ -39,11 +39,11 @@ struct SellQueueView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                if !sellReleases.isEmpty {
-                    overviewSection
-                }
-                ScrollView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: LJTheme.Spacing.lg) {
+                    if !sellReleases.isEmpty {
+                        overviewSection
+                    }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: LJTheme.Spacing.md)], spacing: LJTheme.Spacing.lg) {
                         ForEach(sellReleases) { release in
                             NavigationLink(value: release) {
@@ -55,9 +55,8 @@ struct SellQueueView: View {
                             }
                         }
                     }
-                    .padding()
                 }
-                .background(LJTheme.background)
+                .padding()
             }
             .background(LJTheme.background)
             .navigationTitle("Sell Queue")
@@ -107,9 +106,6 @@ struct SellQueueView: View {
                 .fill(LJTheme.accent)
                 .frame(height: 1)
         }
-        .padding(.horizontal)
-        .padding(.top, LJTheme.Spacing.sm)
-        .background(LJTheme.background)
     }
 
     private func statTile(value: String, label: String, caption: String? = nil) -> some View {

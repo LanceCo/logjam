@@ -6,6 +6,9 @@ final class SyncService: ObservableObject {
     @Published var isSyncing = false
     @Published var lastError: String?
     @Published var lastSyncedAt: Date?
+    /// Set instead of `lastError` when there's no Discogs username yet — callers can offer a
+    /// direct path to Settings rather than a dead-end error alert.
+    @Published var needsCredentials = false
 
     private let client: DiscogsClient
     private static let lastSyncedAtDefaultsKey = "SyncService.lastSyncedAt"
@@ -17,7 +20,7 @@ final class SyncService: ObservableObject {
 
     func sync(context: ModelContext) async {
         guard let username = try? KeychainStore.shared.readDiscogsUsername(), !username.isEmpty else {
-            lastError = "Set your Discogs username in Settings first."
+            needsCredentials = true
             return
         }
         isSyncing = true

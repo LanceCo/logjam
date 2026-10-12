@@ -142,6 +142,10 @@ struct LibraryView: View {
                             .background(LJTheme.background)
                         }
                     }
+                    // Reserve room for AlphabetIndexView (20pt wide, floating on top) plus a
+                    // visible gap, so row/cell content — especially the trailing "listened"
+                    // checkmark — doesn't sit flush against the index strip.
+                    .padding(.trailing, 20 + LJTheme.Spacing.sm)
 
                     if groupedReleases.count > 1 {
                         AlphabetIndexView(letters: groupedReleases.map(\.letter)) { letter in
@@ -222,6 +226,12 @@ struct LibraryView: View {
             }, message: {
                 Text(syncService.lastError ?? "")
             })
+            .alert("Discogs Not Connected", isPresented: $syncService.needsCredentials) {
+                Button("Go to Settings") { isShowingSettings = true }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Add your Discogs username and personal access token in Settings, then sync again.")
+            }
             .sensoryFeedback(.success, trigger: syncService.isSyncing) { old, new in
                 old && !new && syncService.lastError == nil
             }
